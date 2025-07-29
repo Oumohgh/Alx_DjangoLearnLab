@@ -1,19 +1,23 @@
 """Views for relationship_app."""
 
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views.generic import DetailView
 
 from .models import Book, Library
 
 
 def list_books(request):
-    """Function-based view returning a plain-text list of books."""
-    books = Book.objects.select_related("author").all()
-    lines = [f"{book.title} by {book.author.name}" for book in books]
-    # The content type is text/plain so the output is a simple text list as
-    # required by the task instructions.
-    return HttpResponse("\n".join(lines), content_type="text/plain")
+    """Function-based view that lists all books."""
+    books = Book.objects.select_related('author').all()
+
+    if request.GET.get("format") == "text":
+        # Return a plain text list if `?format=text` is passed in the URL
+        lines = [f"{book.title} by {book.author.name}" for book in books]
+        return HttpResponse("\n".join(lines), content_type="text/plain")
+    
+    # Default to rendering with template
+    return render(request, 'list_books.html', {'books': books})
 
 
 class LibraryDetailView(DetailView):
